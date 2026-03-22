@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>프리미엄 수제 도장 시뮬레이터 PRO - 세로형 레이아웃</title>
+    <style>
+        :root {
+            --point-pink: #e91e63;
+            --soft-bg: #fdfafb;
+            --rose-grad: linear-gradient(135deg, #ffafbd 0%, #ffc3a0 100%);
+        }
+        body { font-family: 'Apple SD Gothic Neo', sans-serif; text-align: center; background: var(--soft-bg); padding: 20px; margin: 0; color: #444; }
+        .box { background: white; padding: 30px; border-radius: 30px; display: inline-block; box-shadow: 0 20px 50px rgba(0,0,0,0.06); position: relative; max-width: 850px; }
+        
+        /* [상단 배너] 스마트스토어 링크 */
+        .store-link-banner { 
+            background: #fff5f7; padding: 15px; border-radius: 15px; margin-bottom: 25px; 
+            border: 1.5px solid #ffd1dc; cursor: pointer; transition: 0.3s ease;
+        }
+        .store-link-banner:hover { background: #ffeef2; transform: translateY(-3px); }
+        .store-link-banner b { color: var(--point-pink); font-size: 15px; }
+
+        /* [설정창] 직관적인 컨트롤 레이아웃 */
+        .controls { 
+            display: flex; flex-direction: column; gap: 12px; margin-bottom: 25px; 
+            text-align: left; background: #fafafa; padding: 25px; border-radius: 20px; border: 1px solid #eee; 
+        }
+        .control-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; align-items: end; }
+        label { font-size: 12px; color: #999; margin-bottom: 6px; display: block; font-weight: bold; }
+        input, select { 
+            padding: 12px; border: 1.5px solid #eee; border-radius: 10px; width: 100%; 
+            box-sizing: border-box; font-size: 14px; outline: none; transition: 0.3s;
+        }
+        input:focus, select:focus { border-color: var(--point-pink); background: #fff; }
+        
+        /* 폰트 선택 박스 강조 */
+        .font-box { background: #fffaf0; border: 1px solid #ffe0b2 !important; }
+
+        /* [버튼] 감성 디자인 */
+        .apply-btn { background: #333; color: white; border: none; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; }
+        .download-btn { 
+            background: var(--rose-grad); color: white; border: none; padding: 20px; width: 100%;
+            border-radius: 15px; font-size: 17px; font-weight: bold; cursor: pointer; margin-top: 20px;
+            box-shadow: 0 10px 20px rgba(255,175,189,0.3); transition: 0.3s;
+        }
+        .download-btn:hover { transform: scale(1.01); box-shadow: 0 12px 25px rgba(255,175,189,0.5); }
+
+        /* [메인 뷰 포트] */
+        .canvas-wrapper { position: relative; display: inline-block; line-height: 0; border: 10px solid #fff; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        canvas { max-width: 100%; height: auto; border-radius: 10px; }
+
+        #videoContainer { position: absolute; overflow: hidden; background: #000; z-index: 10; pointer-events: none; border: 4px solid #fff; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .video-player { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; transition: opacity 0.6s; }
+    </style>
+</head>
+<body>
+
+<div class="box">
+    <div class="store-link-banner" onclick="window.open('https://smartstore.naver.com/YOUR_LINK', '_blank')">
+        <b>🌸 우리 아이 첫 도장, 정성을 담아 제작합니다 [스토어 구경하기] →</b>
+    </div>
+
+    <div class="controls">
+        <div class="control-row">
+            <div>
+                <label>성 (1글자)</label>
+                <input type="text" id="surInput" value="김" maxlength="1" oninput="draw()">
+            </div>
+            <div>
+                <label>이름 (1~2글자)</label>
+                <input type="text" id="givenInput" value="민지" maxlength="2" oninput="draw()">
+            </div>
+            <div>
+                <label>💎 몸체 각인 폰트 (5종)</label>
+                <select id="bodyFontSelect" class="font-box" onchange="draw()"></select>
+            </div>
+        </div>
+
+        <div class="control-row">
+            <div>
+                <label>돌 종류 선택</label>
+                <select id="stoneSelect" onchange="changeStone()">
+                    <option value="stone1">청전석</option>
+                    <option value="stone2">요녕석</option>
+                    <option value="stone3">백두석</option>
+                    <option value="stone4">밀크로즈석</option>
+                </select>
+            </div>
+            <div>
+                <label>각인 위치</label>
+                <select id="posSelect" onchange="draw()">
+                    <option value="P1">우측 하단 (전통)</option>
+                    <option value="P2">중앙 하단 (심플)</option>
+                    <option value="P3" selected>우측 상단 (영문/감성)</option>
+                </select>
+            </div>
+            <div>
+                <label>🔴 인영(도장면) 폰트 (10종)</label>
+                <select id="printFontSelect" class="font-box" onchange="draw()"></select>
+            </div>
+        </div>
+        <button class="apply-btn" onclick="draw()">디자인 즉시 반영</button>
+    </div>
+
+    <div class="canvas-wrapper">
+        <canvas id="canvas" width="768" height="1024"></canvas>
+        <div id="videoContainer">
+            <video id="v1" class="video-player" autoplay loop muted playsinline style="opacity: 1;"></video>
+            <video id="v2" class="video-player" autoplay loop muted playsinline style="opacity: 0;"></video>
+        </div>
+    </div>
+
+    <button class="download-btn" onclick="downloadImage()">✨ 나만의 도장 디자인 저장하기 (.png)</button>
+</div>
+
+<script>
+    /* =========================================
+       [폰트 리스트 설정] - 여기서 이름/파일 관리
+       ========================================= */
+    
+    // 몸체 각인용 폰트 (5개)
+    const BODY_FONTS = {
+        'B1': { file: 'body1.woff', name: '감성 명조' },
+        'B2': { file: 'body2.woff', name: '모던 고딕' },
+        'B3': { file: 'body3.woff', name: '정갈한 서체' },
+        'B4': { file: 'body4.woff', name: '우아한 필기체' },
+        'B5': { file: 'body5.woff', name: '클래식 정체' }
+    };
+
+    // 인영(도장면)용 폰트 (10개)
+    const PRINT_FONTS = {
+        'P01': { file: 'p1.woff', name: '전서체(전통)' },
+        'P02': { file: 'p2.woff', name: '고인체(기본)' },
+        'P03': { file: 'p3.woff', name: '초서체(예술)' },
+        'P04': { file: 'p4.woff', name: '예서체(단정)' },
+        'P05': { file: 'p5.woff', name: '단정한 한글' },
+        'P06': { file: 'p6.woff', name: '귀여운 서체' },
+        'P07': { file: 'p7.woff', name: '굵은 도장체' },
+        'P08': { file: 'p8.woff', name: '세련된 서체' },
+        'P09': { file: 'p9.woff', name: '클래식 한자' },
+        'P10': { file: 'p10.woff', name: '모던 스탬프' }
+    };
+
+    /* =========================================
+       [매니저 가이드] 여기서 디자인을 조절하세요!
+       =========================================
+    */
+    
+    // 1. 하단 도장(인영) 디자인 상세 조절
+    const PRINT_UI = {
+        // [위치] 돌도장 왼쪽 빈 공간 중앙의 가로 좌표 (숫자가 작을수록 왼쪽으로 이동)
+        target_x: 200,      
+
+        // [위치] 양각 도장의 세로 높이 (숫자가 클수록 아래로 내려감)
+        y_pos_relief: 680,   // 중하단
+
+        // [위치] 음각 도장의 세로 높이 (양각 아래에 배치)
+        y_pos_intaglio: 890, // 하단
+
+        // [크기] 도장 사각형 크기
+        box_size: 160,      
+
+        // [곡률] 도장 테두리의 둥근 정도
+        radius: 25,         
+
+        // [색상] 인영의 색상 (붉은색 계열)
+        red_color: "#b03a2e", 
+        
+        // [글자] 성(Surname) 설정
+        sur: { 
+            y_off: -35,   // 성글자의 상하 위치 (0이 중앙, 마이너스는 위로)
+            size: 65      // 성글자의 폰트 크기
+        },
+
+        // [글자] 이름(Given Name) 설정
+        given: { 
+            y_off: 35,    // 이름글자의 상하 위치 (플러스는 아래로)
+            size: 60,     // 이름글자의 폰트 크기
+            char_gap: 12  // 이름 두 글자(예: 민, 지) 사이의 좌우 간격
+        }
+    };
+
+    // 2. 영상 레이아웃 설정 (기존 유지)
+    const VIDEO_UI = { top: "35px", right: "35px", width: "230px", height: "160px", radius: "15px" };
+
+    // 3. 기존 각인 좌표 시스템 (돌 몸체용 - 유지)
+    const STAMP_SETTINGS = {
+        "stone1_P1": { len2: { x: 435, y: 740, size: 65, space: 15 }, len3: { x: 435, y: 690, size: 60, space: 12 } },
+        "stone1_P2": { len2: { x: 384, y: 820, size: 65, space: 20 }, len3: { x: 384, y: 820, size: 50, space: 15 } },
+        "stone1_P3": { x: 445, y: 170, size: 35, space: -7 },
+        "stone2_P1": { len2: { x: 435, y: 740, size: 65, space: 15 }, len3: { x: 435, y: 690, size: 60, space: 12 } },
+        "stone2_P2": { len2: { x: 384, y: 820, size: 65, space: 20 }, len3: { x: 384, y: 820, size: 50, space: 15 } },
+        "stone2_P3": { x: 445, y: 170, size: 35, space: -7 },
+        "stone3_P1": { len2: { x: 435, y: 740, size: 65, space: 15 }, len3: { x: 435, y: 690, size: 60, space: 12 } },
+        "stone3_P2": { len2: { x: 384, y: 820, size: 65, space: 20 }, len3: { x: 384, y: 820, size: 50, space: 15 } },
+        "stone3_P3": { x: 445, y: 170, size: 35, space: -7 },
+        "stone4_P1": { len2: { x: 435, y: 740, size: 65, space: 15 }, len3: { x: 435, y: 690, size: 60, space: 12 } },
+        "stone4_P2": { len2: { x: 384, y: 820, size: 65, space: 20 }, len3: { x: 384, y: 820, size: 50, space: 15 } },
+        "stone4_P3": { x: 445, y: 170, size: 35, space: -7 }
+    };
+
+    const STONE_FILES = { "stone1": "stone1.jpg", "stone2": "stone2.jpg", "stone3": "stone3.jpg", "stone4": "stone4.jpg" };
+    const VIDEO_MAP = { "stone1": "stone1_process.mp4", "stone2": "stone2_process.mp4", "stone3": "stone3_process.mp4", "stone4": "stone4_process.mp4" };
+
+    /* --- 엔진 구동 로직 시작 --- */
+    const canvas = document.getElementById('canvas'), ctx = canvas.getContext('2d');
+    const stoneImg = new Image();
+    const v1 = document.getElementById('v1'), v2 = document.getElementById('v2');
+    let curV = v1, nxtV = v2;
+
+    function init() {
+        const vc = document.getElementById('videoContainer');
+        Object.assign(vc.style, { top: VIDEO_UI.top, right: VIDEO_UI.right, width: VIDEO_UI.width, height: VIDEO_UI.height, borderRadius: VIDEO_UI.radius });
+        
+        const bSel = document.getElementById('bodyFontSelect'), pSel = document.getElementById('printFontSelect');
+        Object.keys(BODY_FONTS).forEach(k => bSel.innerHTML += `<option value="${k}">${BODY_FONTS[k].name}</option>`);
+        Object.keys(PRINT_FONTS).forEach(k => pSel.innerHTML += `<option value="${k}">${PRINT_FONTS[k].name}</option>`);
+        
+        changeStone();
+    }
+
+    function changeStone() {
+        const val = document.getElementById('stoneSelect').value;
+        stoneImg.src = STONE_FILES[val];
+        const vPath = VIDEO_MAP[val];
+        if (curV.getAttribute('src') !== vPath) {
+            nxtV.src = vPath; nxtV.load();
+            nxtV.oncanplaythrough = () => {
+                nxtV.style.opacity = 1; curV.style.opacity = 0; nxtV.play();
+                [curV, nxtV] = [nxtV, curV]; nxtV.oncanplaythrough = null;
+            };
+        }
+        stoneImg.onload = draw;
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        if (stoneImg.complete) ctx.drawImage(stoneImg, 0, 0, canvas.width, canvas.height);
+
+        const sur = document.getElementById('surInput').value, given = document.getElementById('givenInput').value;
+        const bFont = document.getElementById('bodyFontSelect').value, pFont = document.getElementById('printFontSelect').value;
+        const stone = document.getElementById('stoneSelect').value, pos = document.getElementById('posSelect').value;
+
+        // 1. 몸체 각인
+        drawBodyStamp(sur + given, bFont, stone, pos);
+
+        // 2. 인영 렌더링 (세로 배치)
+        const renderX = PRINT_UI.target_x - (PRINT_UI.box_size / 2);
+        // 양각 (Relief) - 중하단
+        renderPrintBox(renderX, PRINT_UI.y_pos_relief, sur, given, pFont, false);
+        // 음각 (Intaglio) - 하단
+        renderPrintBox(renderX, PRINT_UI.y_pos_intaglio, sur, given, pFont, true);
+    }
+
+    function drawBodyStamp(text, fontKey, stoneKey, posKey) {
+        const raw = STAMP_SETTINGS[`${stoneKey}_${posKey}`];
+        let cfg = (posKey === 'P3') ? raw : (text.length <= 2 ? raw.len2 : raw.len3);
+        ctx.save();
+        ctx.fillStyle = "rgba(255, 255, 255, 0.85)"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+        ctx.font = `600 ${cfg.size}px ${fontKey}, sans-serif`;
+        if (posKey === 'P2') {
+            let x = cfg.x - (((text.length - 1) * (cfg.size + cfg.space)) / 2);
+            text.split('').forEach(char => { ctx.fillText(char, x, cfg.y); x += cfg.size + cfg.space; });
+        } else {
+            let y = cfg.y;
+            text.split('').forEach(char => {
+                ctx.save();
+                if (posKey === 'P3') { ctx.translate(cfg.x, y); ctx.rotate(Math.PI / 2); ctx.fillText(char, 0, 0); }
+                else { ctx.fillText(char, cfg.x, y); }
+                ctx.restore(); y += cfg.size + cfg.space;
+            });
+        }
+        ctx.restore();
+    }
+
+    function renderPrintBox(x, y, sur, given, fontKey, isNeg) {
+        const ui = PRINT_UI;
+        ctx.save();
+        if (isNeg) {
+            ctx.fillStyle = ui.red_color; fillRRect(x, y, ui.box_size, ui.box_size, ui.radius); ctx.fill();
+            ctx.fillStyle = "#fff";
+        } else {
+            ctx.strokeStyle = ui.red_color; ctx.lineWidth = 8; fillRRect(x, y, ui.box_size, ui.box_size, ui.radius); ctx.stroke();
+            ctx.fillStyle = ui.red_color;
+        }
+        ctx.textAlign = "center"; ctx.textBaseline = "middle";
+        ctx.font = `${ui.sur.size}px ${fontKey}`;
+        ctx.fillText(sur, x + ui.box_size/2, y + ui.box_size/2 + ui.sur.y_off);
+        ctx.font = `${ui.given.size}px ${fontKey}`;
+        if(given.length > 1) {
+            ctx.fillText(given[0], x + ui.box_size/2 - ui.given.char_gap, y + ui.box_size/2 + ui.given.y_off);
+            ctx.fillText(given[1], x + ui.box_size/2 + ui.given.char_gap, y + ui.box_size/2 + ui.given.y_off);
+        } else { ctx.fillText(given, x + ui.box_size/2, y + ui.box_size/2 + ui.given.y_off); }
+        ctx.restore();
+    }
+
+    function fillRRect(x, y, w, h, r) {
+        ctx.beginPath(); ctx.moveTo(x+r, y); ctx.lineTo(x+w-r, y); ctx.quadraticCurveTo(x+w, y, x+w, y+r); ctx.lineTo(x+w, y+h-r); ctx.quadraticCurveTo(x+w, y+h, x+w-r, y+h); ctx.lineTo(x+r, y+h); ctx.quadraticCurveTo(x, y+h, x, y+h-r); ctx.lineTo(x, y+r); ctx.quadraticCurveTo(x, y, x+r, y); ctx.closePath();
+    }
+
+    function downloadImage() {
+        const link = document.createElement('a');
+        link.download = 'custom-stamp-design-portrait.png';
+        link.href = canvas.toDataURL();
+        link.click();
+    }
+
+    window.onload = init;
+</script>
+</body>
+</html>
