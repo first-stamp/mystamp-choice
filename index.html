@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>프리미엄 수제 도장 시뮬레이터 PRO</title>
     <style>
-        /* [폰트 설정] 매니저님 기존 설정 유지 */
+        /* [폰트 설정] */
         @font-face { font-family: 'B1'; src: url('body1.woff'); }
         @font-face { font-family: 'B2'; src: url('body2.woff'); }
         @font-face { font-family: 'B3'; src: url('body3.woff'); }
@@ -23,30 +23,29 @@
         @font-face { font-family: 'P10'; src: url('p10.woff'); }
 
         :root { --point-pink: #e91e63; --soft-bg: #fdfafb; }
+        
         body { font-family: 'Apple SD Gothic Neo', sans-serif; background: var(--soft-bg); margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; }
         
-        /* 상단 배너 - 모바일 대응 */
         .store-banner { background: #fff1f6; padding: 12px; border-radius: 12px; margin-bottom: 15px; width: 100%; max-width: 900px; border: 1px solid #ffdae9; text-align: center; box-sizing: border-box; }
         .store-banner a { color: var(--point-pink); text-decoration: none; font-weight: bold; font-size: 14px; }
 
-        /* 메인 박스 - 패딩 조정 */
-        .box { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.06); width: 100%; max-width: 900px; box-sizing: border-box; }
+        .box { background: white; padding: 15px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.06); width: 100%; max-width: 900px; box-sizing: border-box; }
         
-        /* [컨트롤 레이아웃] PC 3열 / 모바일 1열 자동 전환 */
-        .controls { display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; background: #fafafa; padding: 15px; border-radius: 15px; border: 1px solid #eee; }
-        .control-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; align-items: end; }
+        /* [모바일 기본: 1열] */
+        .controls { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; background: #fafafa; padding: 15px; border-radius: 15px; border: 1px solid #eee; }
+        .control-row { display: grid; grid-template-columns: 1fr !important; gap: 10px; align-items: end; }
         
-        /* 모바일(화면 폭 768px 미만)일 때 1열로 강제 전환 */
-        @media (max-width: 768px) { 
-            .control-row { grid-template-columns: 1fr; gap: 10px; } 
-            .box { padding: 15px; }
-            .main-btn { padding: 15px 0; width: 100%; }
+        /* [PC 전용: 3열 확장] */
+        @media (min-width: 768px) { 
+            body { padding: 20px; }
+            .box { padding: 35px; }
+            .control-row { grid-template-columns: 1fr 1fr 1fr !important; gap: 20px; }
+            .store-banner a { font-size: 16px; }
         }
 
         label { font-size: 11px; color: #888; margin-bottom: 6px; display: block; font-weight: bold; }
         input, select { padding: 12px; border: 1.5px solid #eee; border-radius: 10px; width: 100%; box-sizing: border-box; font-size: 14px; outline: none; background: #fff; }
         
-        /* 캔버스 래퍼 - 모바일에서 꽉 차게 */
         .canvas-wrapper { position: relative; line-height: 0; border: 5px solid #fff; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); overflow: hidden; background: #eee; width: 100%; }
         canvas { width: 100% !important; height: auto !important; display: block; }
         
@@ -54,7 +53,8 @@
         .video-player { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
 
         .action-area { margin-top: 20px; text-align: center; }
-        .main-btn { background: #333; color: #fff; border: none; padding: 16px 40px; border-radius: 10px; cursor: pointer; font-size: 15px; font-weight: bold; transition: 0.3s; }
+        .download-btn { background: var(--point-pink); color: #fff; border: none; padding: 18px; border-radius: 12px; cursor: pointer; font-size: 16px; font-weight: bold; width: 100%; max-width: 400px; transition: 0.3s; }
+        .download-btn:hover { background: #d81b60; transform: translateY(-2px); }
     </style>
 </head>
 <body>
@@ -79,10 +79,7 @@
             </select></div>
             <div><label>🔴 인영(도장면) 폰트 (10종)</label><select id="printFontSelect" onchange="draw()"></select></div>
         </div>
-        <div class="action-area">
-            <button class="main-btn" onclick="draw()">디자인 즉시 반영</button>
         </div>
-    </div>
 
     <div class="canvas-wrapper">
         <canvas id="canvas" width="768" height="1024"></canvas>
@@ -92,7 +89,7 @@
     </div>
 
     <div class="action-area">
-        <button class="main-btn" style="background:#e91e63;" onclick="downloadImage()">디자인 다운로드 받기</button>
+        <button class="download-btn" onclick="downloadImage()">디자인 다운로드 받기</button>
     </div>
 </div>
 
@@ -102,8 +99,11 @@
      */
     const CONFIG = {
         print: {
+            // 1. 테두리 및 기본 설정
             box_size: 160, radius: 20, border_width: 6, red_color: "#b03a2e", font_size: 60,
+            // 2. 도장 전체 위치 (캔버스 좌표)
             relief_x: 200, relief_y: 680, intaglio_x: 200, intaglio_y: 890,
+            // 3. 내부 글자 개별 조정
             sur_x: -35, sur_y: 0, given_single_x: 35, given_single_y: 0,
             given_multi_x: 35, given_gap_y: 35
         },
