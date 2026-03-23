@@ -108,26 +108,29 @@
 
 <script>
     /* ============================================================
-       [1. 매니저 설정 구역] - 디자인 수치를 여기서 조절하세요!
+       [1. 매니저 설정 구역] - 도장 인영 레이아웃 수정 완료
        ============================================================ */
 
-    // 왼쪽 세로형 인영(도장 찍히는 부분) 디자인 조절
     const PRINT_UI = {
-        target_x: 180,      // 도장면 전체 좌우 위치 (작을수록 왼쪽)
-        y_relief: 550,      // 위쪽 도장(양각) 세로 위치
-        y_intaglio: 770,    // 아래쪽 도장(음각) 세로 위치
-        box_size: 160,      // 도장 사각형 크기
-        radius: 25,         // 도장 테두리 곡률
+        target_x: 180,      
+        y_relief: 550,      
+        y_intaglio: 770,    
+        box_size: 160,      
+        radius: 25,         
         red_color: "#b03a2e",
         
-        sur: { y_off: -35, size: 65 },    // 성(첫글자)의 상하위치, 크기
-        given: { y_off: 35, size: 60, char_gap: 12 } // 이름의 상하위치, 크기, 이름간 간격
+        // 수정된 부분: 성은 왼쪽(-), 이름은 오른쪽(+) 배치
+        sur: { x_off: -38, size: 70 },    // 성의 좌우위치, 크기
+        given: { 
+            x_off: 38,                    // 이름의 좌우위치
+            y_top_off: -38,               // 첫 번째 이름 글자 높이
+            y_bottom_off: 38,             // 두 번째 이름 글자 높이
+            size: 60 
+        } 
     };
 
-    // 영상 레이아웃 조절
     const VIDEO_UI = { top: "35px", right: "35px", width: "230px", height: "160px", radius: "15px" };
 
-    // 기존 각인 좌표 시스템 (돌 몸체용 - 완벽 유지)
     const STAMP_SETTINGS = {
         "stone1_P1": { len2: { x: 435, y: 740, size: 65, space: 15 }, len3: { x: 435, y: 690, size: 60, space: 12 } },
         "stone1_P2": { len2: { x: 384, y: 820, size: 65, space: 20 }, len3: { x: 384, y: 820, size: 50, space: 15 } },
@@ -144,7 +147,7 @@
     };
 
     /* ============================================================
-       [2. 데이터 및 엔진 구동] - 여기서부터는 로직입니다.
+       [2. 데이터 및 엔진 구동] - 로직 유지
        ============================================================ */
 
     const BODY_FONTS = {
@@ -185,7 +188,7 @@
         const val = document.getElementById('stoneSelect').value;
         stoneImg.src = STONE_FILES[val];
         video.src = VIDEO_MAP[val];
-        video.play(); // 자동 연속 재생
+        video.play(); 
         stoneImg.onload = draw;
     }
 
@@ -200,14 +203,13 @@
         const stone = document.getElementById('stoneSelect').value;
         const pos = document.getElementById('posSelect').value;
 
-        // 1. 인영 렌더링 (첫글자 성, 나머지 이름)
         const sur = printTxt[0];
         const given = printTxt.substring(1);
         const renderX = PRINT_UI.target_x - (PRINT_UI.box_size / 2);
+        
         renderPrintBox(renderX, PRINT_UI.y_relief, sur, given, pFont, false);
         renderPrintBox(renderX, PRINT_UI.y_intaglio, sur, given, pFont, true);
 
-        // 2. 몸체 각인 렌더링 (영문 글자수 무제한 대응)
         drawBodyStamp(bodyTxt, bFont, stone, pos);
     }
 
@@ -222,7 +224,6 @@
         ctx.textBaseline = "middle";
 
         if (posKey === 'P2') {
-            // 중앙 하단 가로형
             let cfg = (text.length <= 2) ? raw.len2 : raw.len3;
             ctx.font = `600 ${cfg.size}px ${fontKey}, sans-serif`;
             let startX = cfg.x - (((text.length - 1) * (cfg.size + cfg.space)) / 2);
@@ -232,20 +233,18 @@
             });
         } 
         else if (posKey === 'P3') {
-            // 우측 상단 영문/감성 (글자수 무제한 나열)
             ctx.font = `600 ${raw.size}px ${fontKey}, sans-serif`;
             let curY = raw.y;
             text.split('').forEach(char => {
                 ctx.save();
                 ctx.translate(raw.x, curY);
-                ctx.rotate(Math.PI / 2); // 우측 상단은 세로로 누워있는 감성 적용
+                ctx.rotate(Math.PI / 2); 
                 ctx.fillText(char, 0, 0);
                 ctx.restore();
                 curY += raw.size + raw.space;
             });
         }
         else {
-            // P1 우측 하단 전통 세로
             let cfg = (text.length <= 2) ? raw.len2 : raw.len3;
             ctx.font = `600 ${cfg.size}px ${fontKey}, sans-serif`;
             let curY = cfg.y;
@@ -257,6 +256,7 @@
         ctx.restore();
     }
 
+    // 수정된 핵심 인영 렌더링 함수
     function renderPrintBox(x, y, sur, given, fontKey, isNeg) {
         const ui = PRINT_UI;
         ctx.save();
@@ -271,17 +271,20 @@
         const centerX = x + ui.box_size/2;
         const centerY = y + ui.box_size/2;
 
-        // 성(Surname)
+        // 1. 성 (왼쪽 배치)
         ctx.font = `${ui.sur.size}px ${fontKey}`;
-        ctx.fillText(sur, centerX, centerY + ui.sur.y_off);
+        ctx.fillText(sur, centerX + ui.sur.x_off, centerY);
 
-        // 이름(Given Name)
+        // 2. 이름 (오른쪽 위/아래 배치)
         ctx.font = `${ui.given.size}px ${fontKey}`;
         if(given.length >= 2) {
-            ctx.fillText(given[0], centerX - ui.given.char_gap, centerY + ui.given.y_off);
-            ctx.fillText(given[1], centerX + ui.given.char_gap, centerY + ui.given.y_off);
+            // 이름 첫 번째 글자 (오른쪽 위)
+            ctx.fillText(given[0], centerX + ui.given.x_off, centerY + ui.given.y_top_off);
+            // 이름 두 번째 글자 (오른쪽 아래)
+            ctx.fillText(given[1], centerX + ui.given.x_off, centerY + ui.given.y_bottom_off);
         } else {
-            ctx.fillText(given, centerX, centerY + ui.given.y_off);
+            // 이름이 한 글자일 때 (오른쪽 중앙)
+            ctx.fillText(given, centerX + ui.given.x_off, centerY);
         }
         ctx.restore();
     }
