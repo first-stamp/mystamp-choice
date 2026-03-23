@@ -8,10 +8,9 @@
             --point-pink: #e91e63;
             --soft-bg: #fdfafb;
             --rose-grad: linear-gradient(135deg, #ffafbd 0%, #ffc3a0 100%);
-            /* 네이버 및 고대비 컬러 추가 */
+            /* 네이버 대표 색상 */
             --naver-green: #03c75a;
-            --naver-bg: #e7f9ed;
-            --btn-dark: #1e293b; 
+            --naver-bg: #f2fdf5;
         }
 
         /* 폰트 파일 연결 */
@@ -35,14 +34,13 @@
         body { font-family: 'Apple SD Gothic Neo', sans-serif; text-align: center; background: var(--soft-bg); padding: 20px; margin: 0; color: #444; }
         .box { background: white; padding: 30px; border-radius: 30px; display: inline-block; box-shadow: 0 20px 50px rgba(0,0,0,0.06); position: relative; max-width: 900px; }
         
-        /* [수정] 네이버 컬러 적용 배너 */
+        /* [수정] 네이버 스마트스토어 색상 적용 */
         .store-link-banner { background: var(--naver-bg); padding: 15px; border-radius: 15px; margin-bottom: 15px; border: 1.5px solid var(--naver-green); cursor: pointer; transition: 0.3s ease; }
-        .store-link-banner:hover { background: #dcf5e4; transform: translateY(-3px); }
+        .store-link-banner:hover { background: #e8f9ed; transform: translateY(-3px); }
         .store-link-banner b { color: var(--naver-green); font-size: 15px; }
 
-        /* [추가] 실물 크기 안내 문구 */
-        .size-notice { background: #f8f9fa; color: #666; font-size: 13px; padding: 10px; border-radius: 10px; margin-bottom: 20px; border-left: 4px solid #ddd; font-weight: 500; }
-        .size-notice b { color: var(--point-pink); }
+        /* [추가] 실물 크기 안내 문구 스타일 */
+        .size-notice { background: #f8f9fa; color: #555; font-size: 13.5px; padding: 12px; border-radius: 12px; margin-bottom: 20px; border-left: 5px solid var(--naver-green); font-weight: 500; }
 
         .controls { display: flex; flex-direction: column; gap: 12px; margin-bottom: 25px; text-align: left; background: #fafafa; padding: 25px; border-radius: 20px; border: 1px solid #eee; }
         .control-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; align-items: end; }
@@ -55,10 +53,10 @@
         canvas { max-width: 100%; height: auto; border-radius: 10px; }
         #videoContainer { position: absolute; overflow: hidden; background: #000; z-index: 10; pointer-events: none; border: 4px solid #fff; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
         .video-player { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
-
-        /* [수정] 다운로드 버튼 시인성 개선 */
-        .download-btn { background: var(--btn-dark); color: white; border: none; padding: 22px; width: 100%; border-radius: 15px; font-size: 18px; font-weight: 800; cursor: pointer; margin-top: 25px; box-shadow: 0 8px 15px rgba(0,0,0,0.2); transition: 0.3s; letter-spacing: -0.5px; }
-        .download-btn:hover { background: #000; transform: scale(1.01); }
+        
+        /* [수정] 다운로드 버튼 시인성 강화 */
+        .download-btn { background: #1a1a1a; color: white; border: none; padding: 22px; width: 100%; border-radius: 15px; font-size: 18px; font-weight: 800; cursor: pointer; margin-top: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.2); transition: 0.3s; letter-spacing: -0.5px; }
+        .download-btn:hover { background: #000; transform: scale(1.01); box-shadow: 0 12px 25px rgba(0,0,0,0.3); }
     </style>
 </head>
 <body>
@@ -69,7 +67,7 @@
     </div>
 
     <div class="size-notice">
-        📍 <b>안내:</b> 모바일에서 스톤 크기를 실물 크기(1.5*1.5*6cm)에 가깝게 표현했습니다.
+        📍 모바일에서 스톤 크기를 실물 크기(1.5*1.5*6cm)에 가깝게 표현했습니다.
     </div>
 
     <div class="controls">
@@ -125,8 +123,8 @@
 
 <script>
     /* ============================================================
-       [1. 매니저 설정 구역] - 디자인 수치를 여기서 조절하세요!
-       ============================================================ */
+        [1. 매니저 설정 구역] - 디자인 수치를 여기서 조절하세요!
+        ============================================================ */
 
     // 인영 기본 박스 레이아웃
     const PRINT_UI = {
@@ -151,7 +149,16 @@
         'P10': { name: '서체 10', lSize: 75, fSize: 60, lTop: 0, lLeft: 2, fSpace: -1, hLine: 0.95 }
     };
 
-    const VIDEO_UI = { top: "20px", right: "15px", width: "230px", height: "160px", radius: "10px" };
+    // [요청 추가] 몸체 각인 폰트별 상세 설정 (크기, 간격, 위치 조절)
+    const BODY_FONT_DETAILS = {
+        'B1': { name: '감성 명조', size: 65, space: 15, xOff: 0, yOff: 0 },
+        'B2': { name: '모던 고딕', size: 65, space: 15, xOff: 0, yOff: 0 },
+        'B3': { name: '정갈한 서체', size: 60, space: 12, xOff: 0, yOff: 0 },
+        'B4': { name: '우아한 필기체', size: 55, space: 10, xOff: 0, yOff: 0 },
+        'B5': { name: '클래식 정체', size: 65, space: 15, xOff: 0, yOff: 0 }
+    };
+
+    const VIDEO_UI = { top: "35px", right: "35px", width: "230px", height: "160px", radius: "15px" };
 
     const STAMP_SETTINGS = {
         "stone1_P1": { len2: { x: 435, y: 740, size: 65, space: 15 }, len3: { x: 435, y: 690, size: 60, space: 12 } },
@@ -169,11 +176,8 @@
     };
 
     /* ============================================================
-       [2. 구동 로직] - 이 부분은 기능을 위해 유지됩니다.
-       ============================================================ */
-
-    const BODY_FONTS = { 'B1':'B1','B2':'B2','B3':'B3','B4':'B4','B5':'B5' };
-    const BODY_NAMES = ['감성 명조', '모던 고딕', '정갈한 서체', '우아한 필기체', '클래식 정체'];
+        [2. 구동 로직] - 이 부분은 기능을 위해 유지됩니다.
+        ============================================================ */
 
     const canvas = document.getElementById('canvas'), ctx = canvas.getContext('2d');
     const stoneImg = new Image();
@@ -184,7 +188,12 @@
         Object.assign(vc.style, { top: VIDEO_UI.top, right: VIDEO_UI.right, width: VIDEO_UI.width, height: VIDEO_UI.height, borderRadius: VIDEO_UI.radius });
         
         const bSel = document.getElementById('bodyFontSelect'), pSel = document.getElementById('printFontSelect');
-        Object.keys(BODY_FONTS).forEach((k, idx) => bSel.innerHTML += `<option value="${k}">${BODY_NAMES[idx]}</option>`);
+        
+        // [수정] BODY_FONT_DETAILS를 사용하여 선택 옵션 생성
+        Object.keys(BODY_FONT_DETAILS).forEach(k => {
+            bSel.innerHTML += `<option value="${k}">${BODY_FONT_DETAILS[k].name}</option>`;
+        });
+
         Object.keys(PRINT_FONT_DETAILS).forEach(k => {
             pSel.innerHTML += `<option value="${k}">${PRINT_FONT_DETAILS[k].name}</option>`;
         });
@@ -225,32 +234,51 @@
     function drawBodyStamp(text, fontKey, stoneKey, posKey) {
         const key = `${stoneKey}_${posKey}`;
         const raw = STAMP_SETTINGS[key];
-        if (!raw) return;
-        ctx.save(); ctx.fillStyle = "rgba(255, 255, 255, 0.85)"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+        const detail = BODY_FONT_DETAILS[fontKey]; // 상세 설정 불러오기
+        if (!raw || !detail) return;
+
+        ctx.save(); 
+        ctx.fillStyle = "rgba(255, 255, 255, 0.85)"; 
+        ctx.textAlign = "center"; 
+        ctx.textBaseline = "middle";
+
+        // 상세 설정값 적용 (원본 셋팅 + 유저 설정 오프셋)
+        const finalSize = (posKey === 'P3' ? raw.size : (text.length <= 2 ? raw.len2.size : raw.len3.size)) + (detail.size - 65);
+        const finalSpace = (posKey === 'P3' ? raw.space : (text.length <= 2 ? raw.len2.space : raw.len3.space)) + (detail.space - 15);
+
+        ctx.font = `600 ${finalSize}px ${fontKey}`;
+
         if (posKey === 'P2') {
             let cfg = (text.length <= 2) ? raw.len2 : raw.len3;
-            ctx.font = `600 ${cfg.size}px ${fontKey}`;
-            let startX = cfg.x - (((text.length - 1) * (cfg.size + cfg.space)) / 2);
-            text.split('').forEach(char => { ctx.fillText(char, startX, cfg.y); startX += cfg.size + cfg.space; });
+            let startX = cfg.x + detail.xOff - (((text.length - 1) * (finalSize + finalSpace)) / 2);
+            text.split('').forEach(char => { 
+                ctx.fillText(char, startX, cfg.y + detail.yOff); 
+                startX += finalSize + finalSpace; 
+            });
         } else if (posKey === 'P3') {
-            ctx.font = `600 ${raw.size}px ${fontKey}`;
-            let curY = raw.y;
+            let curY = raw.y + detail.yOff;
             text.split('').forEach(char => {
-                ctx.save(); ctx.translate(raw.x, curY); ctx.rotate(Math.PI / 2); ctx.fillText(char, 0, 0); ctx.restore();
-                curY += raw.size + raw.space;
+                ctx.save(); 
+                ctx.translate(raw.x + detail.xOff, curY); 
+                ctx.rotate(Math.PI / 2); 
+                ctx.fillText(char, 0, 0); 
+                ctx.restore();
+                curY += finalSize + finalSpace;
             });
         } else {
             let cfg = (text.length <= 2) ? raw.len2 : raw.len3;
-            ctx.font = `600 ${cfg.size}px ${fontKey}`;
-            let curY = cfg.y;
-            text.split('').forEach(char => { ctx.fillText(char, cfg.x, curY); curY += cfg.size + cfg.space; });
+            let curY = cfg.y + detail.yOff;
+            text.split('').forEach(char => { 
+                ctx.fillText(char, cfg.x + detail.xOff, curY); 
+                curY += finalSize + finalSpace; 
+            });
         }
         ctx.restore();
     }
 
     function renderPrintBox(x, y, sur, given, fontKey, isNeg) {
         const ui = PRINT_UI;
-        const cfg = PRINT_FONT_DETAILS[fontKey];
+        const cfg = PRINT_FONT_DETAILS[fontKey]; 
         
         ctx.save();
         if (isNeg) {
